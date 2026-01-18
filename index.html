@@ -4,401 +4,427 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wordle Score Analyzer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
-    <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/recharts@2.5.0/dist/Recharts.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.23.5/babel.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dbeafe 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .card { 
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        h1 { font-size: 2rem; color: #1f2937; margin-bottom: 20px; }
+        h2 { font-size: 1.5rem; color: #1f2937; margin-bottom: 15px; }
+        .upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-area:hover { border-color: #10b981; background: #f0fdf4; }
+        .upload-area input { display: none; }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-secondary { background: #e5e7eb; color: #374151; }
+        .btn-secondary:hover { background: #d1d5db; }
+        .btn-secondary.active { background: #2563eb; color: white; }
+        .controls { display: flex; gap: 10px; margin: 20px 0; }
+        .info-box {
+            background: #dbeafe;
+            border: 1px solid #93c5fd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #1e40af;
+        }
+        .success-box {
+            background: #d1fae5;
+            border: 1px solid #6ee7b7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .winner-banner {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: white;
+            text-align: center;
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; }
+        th { border-bottom: 2px solid #e5e7eb; font-weight: 600; color: #374151; }
+        td { border-bottom: 1px solid #f3f4f6; }
+        tr:nth-child(even) { background: #f9fafb; }
+        .text-green { color: #10b981; font-weight: bold; }
+        .text-center { text-align: center; }
+        .hidden { display: none; }
+        .chart { 
+            height: 400px; 
+            border: 1px solid #e5e7eb; 
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+            background: white;
+        }
+        .chart-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #374151;
+        }
+        .run { background: #d1fae5; border: 1px solid #6ee7b7; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
+        .rut { background: #fee2e2; border: 1px solid #fca5a5; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-box {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .stat-label { font-size: 0.875rem; color: #6b7280; margin-bottom: 5px; }
+        .stat-value { font-size: 1.75rem; font-weight: bold; color: #1f2937; }
+    </style>
 </head>
 <body>
-    <div id="root"></div>
-    
-    <script type="text/babel">
-        const { useState } = React;
-        const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = Recharts;
+    <div class="container">
+        <div class="card">
+            <h1>🎯 Wordle Score Analyzer</h1>
+            
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                <div style="font-size: 4rem; margin-bottom: 10px;">📤</div>
+                <h3>Upload WhatsApp Chat</h3>
+                <p style="color: #6b7280; margin-top: 10px; font-size: 14px;">Click to select .txt file</p>
+                <input type="file" id="fileInput" accept=".txt">
+            </div>
+            
+            <div id="instructions" class="info-box">
+                <strong>How to export from WhatsApp:</strong>
+                <ol style="margin-left: 20px; margin-top: 10px;">
+                    <li>Open your Wordle chat in WhatsApp</li>
+                    <li>Tap the menu (⋮) → More → Export chat</li>
+                    <li>Select "Without Media"</li>
+                    <li>Upload the .txt file here</li>
+                </ol>
+            </div>
+            
+            <div id="controls" class="controls hidden">
+                <button class="btn btn-secondary active" onclick="switchMode('penalty')">Penalty Scores</button>
+                <button class="btn btn-secondary" onclick="switchMode('raw')">Raw Scores</button>
+            </div>
+            
+            <div id="info" class="success-box hidden"></div>
+        </div>
         
-        function WordleAnalyzer() {
-            const [data, setData] = useState([]);
-            const [players, setPlayers] = useState([]);
-            const [stats, setStats] = useState(null);
-            const [scoringMode, setScoringMode] = useState('penalty');
-            const [penaltyData, setPenaltyData] = useState([]);
+        <div id="results" class="hidden"></div>
+    </div>
 
-            const parseWhatsAppChat = (text) => {
-                const lines = text.split('\n');
-                const wordlePattern = /Wordle ([\d,]+) ([X1-6])\/6/i;
-                const scores = [];
-                const playerSet = new Set();
+    <script>
+        let rawData = [];
+        let penaltyData = [];
+        let players = [];
+        let currentMode = 'penalty';
 
-                lines.forEach(line => {
-                    const messageMatch = line.match(/\[(.*?)\] (.*?): (.*)/);
-                    if (!messageMatch) return;
-                    const [, , name, message] = messageMatch;
-                    const wordleMatch = message.match(wordlePattern);
-                    if (wordleMatch) {
-                        const wordleNum = parseInt(wordleMatch[1].replace(/,/g, ''));
-                        const score = wordleMatch[2] === 'X' ? 7 : parseInt(wordleMatch[2]);
-                        scores.push({ wordleNumber: wordleNum, player: name.trim(), score: score });
-                        playerSet.add(name.trim());
-                    }
-                });
-                return { scores, players: Array.from(playerSet) };
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                parseChat(event.target.result);
             };
+            reader.readAsText(file);
+        });
 
-            const applyPenalties = (scores, playerList) => {
-                const allWordleNumbers = [...new Set(scores.map(s => s.wordleNumber))].sort((a, b) => a - b);
-                const penalizedScores = [...scores];
+        function parseChat(text) {
+            const lines = text.split('\n');
+            const scores = [];
+            const playerSet = new Set();
+            
+            const wordlePattern = /Wordle ([\d,]+) ([X1-6])\/6/i;
+            
+            lines.forEach(line => {
+                const msgMatch = line.match(/\[(.*?)\] (.*?): (.*)/);
+                if (!msgMatch) return;
                 
-                allWordleNumbers.forEach(wordleNum => {
-                    const scoresForDay = scores.filter(s => s.wordleNumber === wordleNum);
-                    const playersWhoPosted = scoresForDay.map(s => s.player);
-                    const playersWhoMissed = playerList.filter(p => !playersWhoPosted.includes(p));
-                    
-                    if (playersWhoMissed.length > 0 && scoresForDay.length > 0) {
-                        const worstScore = Math.max(...scoresForDay.map(s => s.score));
-                        const penaltyScore = worstScore + 1;
-                        
-                        playersWhoMissed.forEach(player => {
-                            penalizedScores.push({
-                                wordleNumber: wordleNum,
-                                player: player,
-                                score: penaltyScore,
-                                isPenalty: true
-                            });
-                        });
-                    }
-                });
-                return penalizedScores;
-            };
-
-            const calculateStats = (scores, playerList) => {
-                const playerStats = {};
+                const [, , name, message] = msgMatch;
+                const wordleMatch = message.match(wordlePattern);
                 
-                playerList.forEach(player => {
-                    const playerScores = scores.filter(s => s.player === player);
-                    const validScores = playerScores.filter(s => s.score <= 6);
-                    const sortedScores = [...playerScores].sort((a, b) => a.wordleNumber - b.wordleNumber);
+                if (wordleMatch) {
+                    const wordleNum = parseInt(wordleMatch[1].replace(/,/g, ''));
+                    const score = wordleMatch[2] === 'X' ? 7 : parseInt(wordleMatch[2]);
                     
-                    let maxStreak = 0, tempStreak = 0, expectedNum = null;
-                    
-                    for (let i = 0; i < sortedScores.length; i++) {
-                        const isSuccess = sortedScores[i].score <= 6;
-                        const isConsecutive = expectedNum === null || sortedScores[i].wordleNumber === expectedNum;
-                        
-                        if (isSuccess && isConsecutive) {
-                            tempStreak++;
-                            maxStreak = Math.max(maxStreak, tempStreak);
-                            expectedNum = sortedScores[i].wordleNumber + 1;
-                        } else if (isSuccess) {
-                            tempStreak = 1;
-                            expectedNum = sortedScores[i].wordleNumber + 1;
-                        } else {
-                            tempStreak = 0;
-                            expectedNum = sortedScores[i].wordleNumber + 1;
-                        }
-                    }
-                    
-                    let currentStreak = 0;
-                    expectedNum = null;
-                    for (let i = sortedScores.length - 1; i >= 0; i--) {
-                        const isSuccess = sortedScores[i].score <= 6;
-                        const isConsecutive = expectedNum === null || sortedScores[i].wordleNumber === expectedNum;
-                        if (isSuccess && isConsecutive) {
-                            currentStreak++;
-                            expectedNum = sortedScores[i].wordleNumber - 1;
-                        } else {
-                            break;
-                        }
-                    }
-                    
-                    const recentWordleNum = Math.max(...playerScores.map(s => s.wordleNumber));
-                    const weekScores = playerScores.filter(s => s.wordleNumber >= recentWordleNum - 7 && s.score <= 6);
-                    const weekAvg = weekScores.length > 0 ? (weekScores.reduce((sum, s) => sum + s.score, 0) / weekScores.length).toFixed(2) : 'N/A';
-                    
-                    playerStats[player] = {
-                        average: validScores.length > 0 ? (validScores.reduce((sum, s) => sum + s.score, 0) / validScores.length).toFixed(2) : 'N/A',
-                        weekAverage: weekAvg,
-                        currentStreak: currentStreak,
-                        maxStreak: maxStreak
-                    };
-                });
-                return playerStats;
-            };
-
-            const getRunsAndRuts = (player, useData) => {
-                const playerScores = useData.filter(d => d.player === player).sort((a, b) => a.wordleNumber - b.wordleNumber);
-                const validScores = playerScores.filter(s => s.score <= 6);
-                const overallAvg = validScores.length > 0 ? validScores.reduce((sum, s) => sum + s.score, 0) / validScores.length : 4;
-                
-                const runsRuts = [];
-                const windowSize = 10;
-                
-                for (let i = 0; i <= playerScores.length - windowSize; i++) {
-                    const window = playerScores.slice(i, i + windowSize).filter(s => s.score <= 6);
-                    if (window.length < windowSize) continue;
-                    
-                    const windowAvg = window.reduce((sum, s) => sum + s.score, 0) / window.length;
-                    const diff = windowAvg - overallAvg;
-                    
-                    if (Math.abs(diff) > 0.4) {
-                        const lastPeriod = runsRuts[runsRuts.length - 1];
-                        const currentStart = playerScores[i].wordleNumber;
-                        const currentEnd = playerScores[i + windowSize - 1].wordleNumber;
-                        
-                        if (lastPeriod && currentStart <= lastPeriod.end + 1 && 
-                            ((diff < 0 && lastPeriod.type === 'run') || (diff > 0 && lastPeriod.type === 'rut'))) {
-                            lastPeriod.end = currentEnd;
-                            lastPeriod.avg = windowAvg.toFixed(2);
-                            lastPeriod.length = lastPeriod.end - lastPeriod.start + 1;
-                            lastPeriod.diff = diff.toFixed(2);
-                        } else if (!lastPeriod || currentStart > lastPeriod.end + 1) {
-                            runsRuts.push({
-                                start: currentStart,
-                                end: currentEnd,
-                                length: windowSize,
-                                avg: windowAvg.toFixed(2),
-                                diff: diff.toFixed(2),
-                                type: diff < 0 ? 'run' : 'rut'
-                            });
-                        }
-                    }
+                    scores.push({ wordleNumber: wordleNum, player: name.trim(), score: score });
+                    playerSet.add(name.trim());
                 }
-                return runsRuts.filter(p => p.length >= 15);
-            };
-
-            const handleFileUpload = (event) => {
-                const file = event.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const text = e.target.result;
-                    const { scores, players: foundPlayers } = parseWhatsAppChat(text);
-                    setData(scores);
-                    setPlayers(foundPlayers);
-                    const penalized = applyPenalties(scores, foundPlayers);
-                    setPenaltyData(penalized);
-                    setStats(calculateStats(scores, foundPlayers));
-                };
-                reader.readAsText(file);
-            };
-
-            const currentData = scoringMode === 'raw' ? data : penaltyData;
-            const currentStats = scoringMode === 'raw' ? stats : (penaltyData.length > 0 ? calculateStats(penaltyData, players) : stats);
-
-            const getRunningAvg = () => {
-                if (currentData.length === 0) return [];
-                const wordleNumbers = [...new Set(currentData.map(d => d.wordleNumber))].sort((a, b) => a - b);
-                return wordleNumbers.map((num) => {
-                    const entry = { wordleNumber: num };
-                    players.forEach(player => {
-                        const playerScores = currentData.filter(d => d.player === player && d.wordleNumber <= num);
-                        const validScores = playerScores.filter(s => s.score <= 6);
-                        if (validScores.length > 0) {
-                            const avg = validScores.reduce((sum, s) => sum + s.score, 0) / validScores.length;
-                            entry[player] = (avg >= 3.6 && avg <= 4.5) ? avg : null;
-                        } else {
-                            entry[player] = null;
-                        }
-                    });
-                    return entry;
-                });
-            };
-
-            const getRunningAvgZoomed = () => {
-                if (currentData.length === 0) return [];
-                const wordleNumbers = [...new Set(currentData.map(d => d.wordleNumber))].sort((a, b) => a - b);
-                return wordleNumbers.filter(num => num >= 1000).map((num) => {
-                    const entry = { wordleNumber: num };
-                    players.forEach(player => {
-                        const playerScores = currentData.filter(d => d.player === player && d.wordleNumber <= num);
-                        const validScores = playerScores.filter(s => s.score <= 6);
-                        if (validScores.length > 0) {
-                            const avg = validScores.reduce((sum, s) => sum + s.score, 0) / validScores.length;
-                            entry[player] = (avg >= 3.6 && avg <= 4.1) ? avg : null;
-                        } else {
-                            entry[player] = null;
-                        }
-                    });
-                    return entry;
-                });
-            };
-
-            return (
-                <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-6">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
-                            <h1 className="text-3xl font-bold text-gray-800 mb-6">🎯 Wordle Score Analyzer</h1>
-
-                            <label className="cursor-pointer block">
-                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-500 transition">
-                                    <div className="text-6xl mb-2">📤</div>
-                                    <span className="text-sm font-semibold block">Upload WhatsApp Chat</span>
-                                    <p className="text-xs text-gray-500 mt-1">Export chat from WhatsApp (.txt)</p>
-                                    <input type="file" accept=".txt" onChange={handleFileUpload} className="hidden" />
-                                </div>
-                            </label>
-
-                            {data.length > 0 && (
-                                <>
-                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 my-4">
-                                        <p className="text-sm font-semibold text-blue-900 mb-1">Scoring Rules:</p>
-                                        <ul className="text-sm text-blue-800 space-y-1 ml-4">
-                                            <li>• Failed puzzle (X/6): 7 points</li>
-                                            <li>• Missing a day (Penalty Mode): Worst score + 1 point</li>
-                                        </ul>
-                                    </div>
-
-                                    <div className="flex gap-2 mb-6 flex-wrap">
-                                        <button 
-                                            onClick={() => setScoringMode('penalty')} 
-                                            className={`px-6 py-3 rounded-lg font-semibold ${scoringMode === 'penalty' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
-                                        >
-                                            Penalty Scores
-                                        </button>
-                                        <button 
-                                            onClick={() => setScoringMode('raw')} 
-                                            className={`px-6 py-3 rounded-lg font-semibold ${scoringMode === 'raw' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
-                                        >
-                                            Raw Scores
-                                        </button>
-                                    </div>
-
-                                    <div className="bg-green-50 rounded-lg p-4">
-                                        <p className="font-semibold">{currentData.length} scores from {players.length} players</p>
-                                        <p className="text-sm">Players: {players.join(', ')}</p>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-
-                        {currentStats && (
-                            <>
-                                <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-lg shadow-lg p-8 mb-6 text-center text-white">
-                                    <h2 className="text-3xl font-bold mb-2">🏆 Wordler of the Week 🏆</h2>
-                                    <p className="text-2xl font-semibold">
-                                        {players.reduce((best, player) => {
-                                            const playerAvg = parseFloat(currentStats[player].weekAverage);
-                                            const bestAvg = parseFloat(currentStats[best].weekAverage);
-                                            if (isNaN(playerAvg)) return best;
-                                            if (isNaN(bestAvg)) return player;
-                                            return playerAvg < bestAvg ? player : best;
-                                        })}
-                                    </p>
-                                </div>
-
-                                <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-                                    <h2 className="text-2xl font-bold mb-4">Performance Summary</h2>
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full">
-                                            <thead>
-                                                <tr className="border-b-2">
-                                                    <th className="text-left py-3 px-4">Player</th>
-                                                    <th className="text-center py-3 px-4">Week Avg</th>
-                                                    <th className="text-center py-3 px-4">All-Time</th>
-                                                    <th className="text-center py-3 px-4">Streak</th>
-                                                    <th className="text-center py-3 px-4">Max</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {players.sort((a, b) => parseFloat(currentStats[a].average) - parseFloat(currentStats[b].average))
-                                                    .map((player, idx) => (
-                                                        <tr key={player} className={idx % 2 === 0 ? 'bg-gray-50' : ''}>
-                                                            <td className="py-3 px-4 font-medium">{player}</td>
-                                                            <td className="text-center py-3 px-4">{currentStats[player].weekAverage}</td>
-                                                            <td className="text-center py-3 px-4 font-bold text-green-600">{currentStats[player].average}</td>
-                                                            <td className="text-center py-3 px-4">{currentStats[player].currentStreak}</td>
-                                                            <td className="text-center py-3 px-4">{currentStats[player].maxStreak}</td>
-                                                        </tr>
-                                                    ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-
-                                <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-                                    <h2 className="text-xl font-bold mb-4">Cumulative Average (3.6-4.5)</h2>
-                                    <ResponsiveContainer width="100%" height={400}>
-                                        <LineChart data={getRunningAvg()}>
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="wordleNumber" />
-                                            <YAxis domain={[3.6, 4.5]} />
-                                            <Tooltip />
-                                            <Legend />
-                                            {players.map((player, idx) => (
-                                                <Line 
-                                                    key={player} 
-                                                    type="monotone" 
-                                                    dataKey={player} 
-                                                    stroke={`hsl(${idx * 360 / players.length}, 70%, 50%)`} 
-                                                    strokeWidth={2} 
-                                                    connectNulls 
-                                                    dot={false}
-                                                />
-                                            ))}
-                                        </LineChart>
-                                    </ResponsiveContainer>
-                                </div>
-
-                                <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-                                    <h2 className="text-xl font-bold mb-4">Wordle 1000+ - Cumulative Average (3.6-4.1)</h2>
-                                    <ResponsiveContainer width="100%" height={400}>
-                                        <LineChart data={getRunningAvgZoomed()}>
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="wordleNumber" />
-                                            <YAxis domain={[3.6, 4.1]} />
-                                            <Tooltip />
-                                            <Legend />
-                                            {players.map((player, idx) => (
-                                                <Line 
-                                                    key={player} 
-                                                    type="monotone" 
-                                                    dataKey={player} 
-                                                    stroke={`hsl(${idx * 360 / players.length}, 70%, 50%)`} 
-                                                    strokeWidth={3} 
-                                                    connectNulls 
-                                                    dot={true}
-                                                />
-                                            ))}
-                                        </LineChart>
-                                    </ResponsiveContainer>
-                                </div>
-
-                                {players.map(player => {
-                                    const runsRuts = getRunsAndRuts(player, currentData);
-                                    if (runsRuts.length === 0) return null;
-                                    
-                                    return (
-                                        <div key={player} className="bg-white rounded-lg shadow-lg p-6 mb-6">
-                                            <h2 className="text-xl font-bold mb-4">{player} - Runs & Ruts (15+ games)</h2>
-                                            <div className="space-y-2">
-                                                {runsRuts.map((period, idx) => (
-                                                    <div 
-                                                        key={idx} 
-                                                        className={`p-3 rounded-lg ${period.type === 'run' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}
-                                                    >
-                                                        <div className="flex justify-between items-center flex-wrap gap-2">
-                                                            <div>
-                                                                <span className="font-semibold">Wordle {period.start} - {period.end}</span>
-                                                                <span className="text-sm text-gray-600 ml-2">({period.length} games)</span>
-                                                            </div>
-                                                            <span className={`text-sm font-semibold ${period.type === 'run' ? 'text-green-700' : 'text-red-700'}`}>
-                                                                {period.type === 'run' ? '🔥 RUN' : '😰 RUT'} - Avg: {period.avg} ({period.diff > 0 ? '+' : ''}{period.diff})
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </>
-                        )}
-                    </div>
-                </div>
-            );
+            });
+            
+            rawData = scores;
+            players = Array.from(playerSet);
+            penaltyData = applyPenalties(scores, players);
+            
+            document.getElementById('instructions').classList.add('hidden');
+            document.getElementById('controls').classList.remove('hidden');
+            document.getElementById('info').classList.remove('hidden');
+            document.getElementById('info').innerHTML = `<strong>✅ Success!</strong> Found ${scores.length} scores from ${players.length} players: ${players.join(', ')}`;
+            
+            displayResults();
         }
 
-        ReactDOM.render(<WordleAnalyzer />, document.getElementById('root'));
+        function applyPenalties(scores, playerList) {
+            const allWordles = [...new Set(scores.map(s => s.wordleNumber))].sort((a, b) => a - b);
+            const penalized = [...scores];
+            
+            allWordles.forEach(wordleNum => {
+                const scoresForDay = scores.filter(s => s.wordleNumber === wordleNum);
+                const playersWhoPosted = scoresForDay.map(s => s.player);
+                const playersWhoMissed = playerList.filter(p => !playersWhoPosted.includes(p));
+                
+                if (playersWhoMissed.length > 0 && scoresForDay.length > 0) {
+                    const worstScore = Math.max(...scoresForDay.map(s => s.score));
+                    const penaltyScore = worstScore + 1;
+                    
+                    playersWhoMissed.forEach(player => {
+                        penalized.push({
+                            wordleNumber: wordleNum,
+                            player: player,
+                            score: penaltyScore,
+                            isPenalty: true
+                        });
+                    });
+                }
+            });
+            return penalized;
+        }
+
+        function calculateStats(scores, playerList) {
+            const stats = {};
+            
+            playerList.forEach(player => {
+                const playerScores = scores.filter(s => s.player === player);
+                const validScores = playerScores.filter(s => s.score <= 6);
+                const sortedScores = [...playerScores].sort((a, b) => a.wordleNumber - b.wordleNumber);
+                
+                let maxStreak = 0, tempStreak = 0, expectedNum = null;
+                
+                for (let i = 0; i < sortedScores.length; i++) {
+                    const isSuccess = sortedScores[i].score <= 6;
+                    const isConsecutive = expectedNum === null || sortedScores[i].wordleNumber === expectedNum;
+                    
+                    if (isSuccess && isConsecutive) {
+                        tempStreak++;
+                        maxStreak = Math.max(maxStreak, tempStreak);
+                        expectedNum = sortedScores[i].wordleNumber + 1;
+                    } else if (isSuccess) {
+                        tempStreak = 1;
+                        expectedNum = sortedScores[i].wordleNumber + 1;
+                    } else {
+                        tempStreak = 0;
+                        expectedNum = sortedScores[i].wordleNumber + 1;
+                    }
+                }
+                
+                let currentStreak = 0;
+                expectedNum = null;
+                for (let i = sortedScores.length - 1; i >= 0; i--) {
+                    const isSuccess = sortedScores[i].score <= 6;
+                    const isConsecutive = expectedNum === null || sortedScores[i].wordleNumber === expectedNum;
+                    if (isSuccess && isConsecutive) {
+                        currentStreak++;
+                        expectedNum = sortedScores[i].wordleNumber - 1;
+                    } else {
+                        break;
+                    }
+                }
+                
+                const recentWordleNum = Math.max(...playerScores.map(s => s.wordleNumber));
+                const weekScores = playerScores.filter(s => s.wordleNumber >= recentWordleNum - 7 && s.score <= 6);
+                const weekAvg = weekScores.length > 0 ? (weekScores.reduce((sum, s) => sum + s.score, 0) / weekScores.length).toFixed(2) : 'N/A';
+                
+                stats[player] = {
+                    total: playerScores.length,
+                    average: validScores.length > 0 ? (validScores.reduce((sum, s) => sum + s.score, 0) / validScores.length).toFixed(2) : 'N/A',
+                    weekAverage: weekAvg,
+                    currentStreak: currentStreak,
+                    maxStreak: maxStreak
+                };
+            });
+            return stats;
+        }
+
+        function getRunsAndRuts(player, scores) {
+            const playerScores = scores.filter(d => d.player === player).sort((a, b) => a.wordleNumber - b.wordleNumber);
+            const validScores = playerScores.filter(s => s.score <= 6);
+            const overallAvg = validScores.length > 0 ? validScores.reduce((sum, s) => sum + s.score, 0) / validScores.length : 4;
+            
+            const runsRuts = [];
+            const windowSize = 10;
+            
+            for (let i = 0; i <= playerScores.length - windowSize; i++) {
+                const window = playerScores.slice(i, i + windowSize).filter(s => s.score <= 6);
+                if (window.length < windowSize) continue;
+                
+                const windowAvg = window.reduce((sum, s) => sum + s.score, 0) / window.length;
+                const diff = windowAvg - overallAvg;
+                
+                if (Math.abs(diff) > 0.4) {
+                    const lastPeriod = runsRuts[runsRuts.length - 1];
+                    const currentStart = playerScores[i].wordleNumber;
+                    const currentEnd = playerScores[i + windowSize - 1].wordleNumber;
+                    
+                    if (lastPeriod && currentStart <= lastPeriod.end + 1 && 
+                        ((diff < 0 && lastPeriod.type === 'run') || (diff > 0 && lastPeriod.type === 'rut'))) {
+                        lastPeriod.end = currentEnd;
+                        lastPeriod.avg = windowAvg.toFixed(2);
+                        lastPeriod.length = lastPeriod.end - lastPeriod.start + 1;
+                        lastPeriod.diff = diff.toFixed(2);
+                    } else if (!lastPeriod || currentStart > lastPeriod.end + 1) {
+                        runsRuts.push({
+                            start: currentStart,
+                            end: currentEnd,
+                            length: windowSize,
+                            avg: windowAvg.toFixed(2),
+                            diff: diff.toFixed(2),
+                            type: diff < 0 ? 'run' : 'rut'
+                        });
+                    }
+                }
+            }
+            return runsRuts.filter(p => p.length >= 15);
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.controls .btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            displayResults();
+        }
+
+        function displayResults() {
+            const scores = currentMode === 'raw' ? rawData : penaltyData;
+            const stats = calculateStats(scores, players);
+            
+            const winner = players.reduce((best, player) => {
+                const playerAvg = parseFloat(stats[player].weekAverage);
+                const bestAvg = parseFloat(stats[best].weekAverage);
+                if (isNaN(playerAvg)) return best;
+                if (isNaN(bestAvg)) return player;
+                return playerAvg < bestAvg ? player : best;
+            });
+            
+            let html = `
+                <div class="winner-banner">
+                    <h2 style="font-size: 2rem; margin-bottom: 10px;">🏆 Wordler of the Week 🏆</h2>
+                    <p style="font-size: 1.5rem; font-weight: 600;">${winner}</p>
+                </div>
+                
+                <div class="card">
+                    <h2>Performance Summary</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th class="text-center">Week Avg</th>
+                                <th class="text-center">All-Time</th>
+                                <th class="text-center">Streak</th>
+                                <th class="text-center">Max</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            players.sort((a, b) => parseFloat(stats[a].average) - parseFloat(stats[b].average))
+                .forEach(player => {
+                    html += `
+                        <tr>
+                            <td style="font-weight: 600;">${player}</td>
+                            <td class="text-center">${stats[player].weekAverage}</td>
+                            <td class="text-center text-green">${stats[player].average}</td>
+                            <td class="text-center">${stats[player].currentStreak}</td>
+                            <td class="text-center">${stats[player].maxStreak}</td>
+                        </tr>
+                    `;
+                });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="card">
+                    <h2>Detailed Player Statistics</h2>
+            `;
+            
+            players.forEach(player => {
+                const runsRuts = getRunsAndRuts(player, scores);
+                html += `
+                    <div style="margin-bottom: 30px; padding-bottom: 30px; border-bottom: 1px solid #e5e7eb;">
+                        <h3 style="font-size: 1.25rem; margin-bottom: 15px;">${player}</h3>
+                        <div class="stat-grid">
+                            <div class="stat-box">
+                                <div class="stat-label">All-Time Average</div>
+                                <div class="stat-value text-green">${stats[player].average}</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Week Average</div>
+                                <div class="stat-value">${stats[player].weekAverage}</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Current Streak</div>
+                                <div class="stat-value">${stats[player].currentStreak}</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Max Streak</div>
+                                <div class="stat-value">${stats[player].maxStreak}</div>
+                            </div>
+                        </div>
+                `;
+                
+                if (runsRuts.length > 0) {
+                    html += `<h4 style="margin-top: 15px; margin-bottom: 10px; font-weight: 600;">Notable Runs & Ruts (15+ games)</h4>`;
+                    runsRuts.forEach(period => {
+                        html += `
+                            <div class="${period.type}">
+                                <strong>Wordle ${period.start} - ${period.end}</strong>
+                                <span style="font-size: 0.875rem; color: #6b7280; margin-left: 8px;">(${period.length} games)</span>
+                                <span style="float: right; font-weight: 600;">
+                                    ${period.type === 'run' ? '🔥 RUN' : '😰 RUT'} - Avg: ${period.avg} (${period.diff > 0 ? '+' : ''}${period.diff})
+                                </span>
+                            </div>
+                        `;
+                    });
+                }
+                
+                html += `</div>`;
+            });
+            
+            html += `</div>`;
+            
+            document.getElementById('results').innerHTML = html;
+            document.getElementById('results').classList.remove('hidden');
+        }
     </script>
 </body>
 </html>
